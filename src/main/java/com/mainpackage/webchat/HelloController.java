@@ -1,12 +1,22 @@
 package com.mainpackage.webchat;
 
+//数据库相关包
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sql.DataSource;
+import org.springframework.beans.factory.annotation.Autowired;
+
+
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+
 import java.net.http.HttpRequest;
-import org.springframework.web.bind.annotation.RequestParam;
 
 // 项目搭建参考：https://www.jianshu.com/p/d6b7a2806655
 
@@ -21,6 +31,36 @@ public class HelloController
     public String login(@RequestParam String name)
     {
         return  name;
+    }
+
+    //使用这种可以直接避免参数不同
+    //其中value的account参数要与底下的PathVariable相同，实现url绑定的一种方式。
+//    @RequestMapping(value = "/{account}",method = RequestMethod.GET)
+//    public String account(@PathVariable("account") String accountInfo )
+//    {
+//        return accountInfo;
+//    }
+
+    //测试mysql数据库连接情况 参考教程:https://www.jianshu.com/p/c440b57f4531
+    @Autowired
+    DataSource dataSource;
+
+    @RequestMapping("/mysqltest")
+    public Object mysqltest() throws Exception {
+        Connection connect = dataSource.getConnection();
+        PreparedStatement pre = connect.prepareStatement("select * from login_tb");
+        ResultSet result = pre.executeQuery();
+        List<Map<String,Object>> list = new ArrayList<Map<String,Object>>();
+        while (result.next()) {
+            Map<String,Object> map = new HashMap<String, Object>();
+            map.put("id", result.getObject("id"));
+            map.put("name", result.getObject("name"));
+            list.add(map);
+        }
+        if(result!= null ) result.close();
+        if(pre!= null ) pre.close();
+        if(connect!= null ) connect.close();
+        return list;
     }
 }
 
